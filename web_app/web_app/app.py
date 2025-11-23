@@ -27,11 +27,27 @@ logger.addHandler(stream_handler)
 
 # Load YOLO model with error handling
 try:
-    model_path = "D:/success/model/best.pt"
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model file not found at {model_path}")
+    # Try multiple possible model paths (relative to this file)
+    possible_paths = [
+        os.path.join(os.path.dirname(__file__), "model", "best.pt"),  # web_app/web_app/model/best.pt
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "model", "best.pt"),  # web_app/model/best.pt
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "yolov8n.pt"),  # web_app/yolov8n.pt
+        "web_app/web_app/model/best.pt",  # Relative to project root
+        "web_app/model/best.pt",  # Relative to project root
+        "D:/success/model/best.pt"  # Original path (fallback)
+    ]
+    
+    model_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            model_path = path
+            break
+    
+    if not model_path:
+        raise FileNotFoundError(f"Model file not found. Checked: {possible_paths[:5]}")
+    
     model = YOLO(model_path)
-    logger.info("YOLO model loaded successfully")
+    logger.info(f"YOLO model loaded successfully from: {model_path}")
 except Exception as e:
     logger.error(f"Error loading YOLO model: {str(e)}")
     model = None
